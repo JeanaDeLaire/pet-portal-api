@@ -4,7 +4,7 @@ const express = require('express')
 const passport = require('passport')
 
 // pull in Mongoose model for cares
-const care = require('../models/care')
+const Care = require('../models/care')
 
 // we'll use this to intercept any errors that get thrown and send them
 // back to the client with the appropriate status code
@@ -31,7 +31,7 @@ const router = express.Router()
 // INDEX
 // GET /cares
 router.get('/cares', requireToken, (req, res) => {
-  care.find()
+  Care.find()
     .then(cares => {
       // `cares` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
@@ -48,7 +48,7 @@ router.get('/cares', requireToken, (req, res) => {
 // GET /cares/5a7db6c74d55bc51bdf39793
 router.get('/cares/:id', requireToken, (req, res) => {
   // req.params.id will be set based on the `:id` in the route
-  care.findById(req.params.id)
+  Care.findById(req.params.id)
     .then(handle404)
     // if `findById` is succesful, respond with 200 and "care" JSON
     .then(care => res.status(200).json({ care: care.toObject() }))
@@ -62,7 +62,7 @@ router.post('/cares', requireToken, (req, res) => {
   // set owner of new care to be current user
   req.body.care.owner = req.user.id
 
-  care.create(req.body.care)
+  Care.create(req.body.care)
     // respond to succesful `create` with status 201 and JSON of new "care"
     .then(care => {
       res.status(201).json({ care: care.toObject() })
@@ -80,7 +80,7 @@ router.patch('/cares/:id', requireToken, (req, res) => {
   // owner, prevent that by deleting that key/value pair
   delete req.body.care.owner
 
-  care.findById(req.params.id)
+  Care.findById(req.params.id)
     .then(handle404)
     .then(care => {
       // pass the `req` object and the Mongoose record to `requireOwnership`
@@ -108,7 +108,7 @@ router.patch('/cares/:id', requireToken, (req, res) => {
 // DESTROY
 // DELETE /cares/5a7db6c74d55bc51bdf39793
 router.delete('/cares/:id', requireToken, (req, res) => {
-  care.findById(req.params.id)
+  Care.findById(req.params.id)
     .then(handle404)
     .then(care => {
       // throw an error if current user doesn't own `care`

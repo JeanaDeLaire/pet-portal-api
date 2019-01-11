@@ -1,7 +1,7 @@
 #!/bin/bash
 
 API="http://localhost:4741"
-URL_PATH="/pets"
+URL_PATH="/pictures"
 
 curl "${API}${URL_PATH}/${ID}" \
   --include \
@@ -9,10 +9,10 @@ curl "${API}${URL_PATH}/${ID}" \
   --header "Content-Type: application/json" \
   --header "Authorization: Bearer ${TOKEN}" \
   --data '{
-    "pet": {
-    "name": "'"${NAME}"'",
-    "nickname": "'"${NICKNAME}"'",
-    "age": "'"${AGE}"'"
+    "bucket": {
+      "description": "'"${DESCRIPTION}"'",
+      "url": "'"${URL}"'",
+      "date": "'"${DATE}"'"
     }
   }'
 

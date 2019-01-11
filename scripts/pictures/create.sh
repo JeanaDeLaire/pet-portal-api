@@ -1,18 +1,17 @@
 #!/bin/bash
 
 API="http://localhost:4741"
-URL_PATH="/pets"
+URL_PATH="/pictures"
 
-curl "${API}${URL_PATH}/${ID}" \
+curl "${API}${URL_PATH}" \
   --include \
-  --request PATCH \
+  --request POST \
   --header "Content-Type: application/json" \
   --header "Authorization: Bearer ${TOKEN}" \
   --data '{
-    "pet": {
-    "name": "'"${NAME}"'",
-    "nickname": "'"${NICKNAME}"'",
-    "age": "'"${AGE}"'"
+    "upload": {
+      "url": "'"${URL}"'",
+      "title": "'"${TITLE}"'"
     }
   }'
 
