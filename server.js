@@ -7,6 +7,9 @@ const cors = require('cors')
 // require route files
 const exampleRoutes = require('./app/routes/example_routes')
 const userRoutes = require('./app/routes/user_routes')
+const petRoutes = require('./app/routes/pet_routes')
+const careRoutes = require('./app/routes/care_routes')
+const pictureRoutes = require('./app/routes/picture_routes')
 
 // require database configuration logic
 // `db` will be the actual Mongo URI as a string
@@ -71,6 +74,9 @@ app.use(bodyParser.urlencoded({ extended: true }))
 // register route files
 app.use(exampleRoutes)
 app.use(userRoutes)
+app.use(petRoutes)
+app.use(careRoutes)
+app.use(pictureRoutes)
 
 // run API on designated port (4741 in this case)
 app.listen(port, () => {
