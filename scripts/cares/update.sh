@@ -10,11 +10,9 @@ curl "${API}${URL_PATH}" \
   --header "Authorization: Bearer ${TOKEN}" \
   --data '{
     "care": {
-      "diet": "'"${DIET}"'",
-      "medicine": "'"${MEDICINE}"'",
-      "vet": "'"${VET}"'",
-      "lastAppt": "'"${LASTAPPT}"'",
-      "nextAppt": "'"${NEXTAPPT}"'"
+      "pet": "'"${PET}"'",
+      "type": "'"${TYPE}"'",
+      "details": "'"${DETAILS}"'"
     }
   }'
 

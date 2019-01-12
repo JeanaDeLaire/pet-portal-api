@@ -1,29 +1,17 @@
 const mongoose = require('mongoose')
 
 const careSchema = new mongoose.Schema({
-  diet: {
+  type: {
     type: String,
     required: true
   },
-  medicine: {
+  details: {
     type: String,
     required: true
   },
-  vet: {
-    type: String,
-    required: true
-  },
-  lastAppt: {
-    type: Date,
-    required: false
-  },
-  nextAppt: {
-    type: Date,
-    required: false
-  },
-  owner: {
+  pet: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Pet',
     required: true
   }
 }, {

@@ -9,9 +9,11 @@ curl "${API}${URL_PATH}/${ID}" \
   --header "Content-Type: application/json" \
   --header "Authorization: Bearer ${TOKEN}" \
   --data '{
-    "bucket": {
-      "description": "'"${DESCRIPTION}"'",
+    "picture": {
+      "pet": "'"${PET}"'",
+      image: "'"${IMAGE_PATH}"'"
       "url": "'"${URL}"'",
+      "description": "'"${DESCRIPTION}"'",
       "date": "'"${DATE}"'"
     }
   }'

@@ -14,9 +14,9 @@ const pictureSchema = new mongoose.Schema({
     default: Date.now,
     required: true
   },
-  owner: {
+  pet: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Pet',
     required: true
   }
 }, {
