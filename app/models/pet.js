@@ -1,9 +1,11 @@
 const mongoose = require('mongoose')
+const Schema = mongoose.Schema
 
 const petSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
   nickname: {
     type: String,
@@ -18,7 +20,7 @@ const petSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  care: []
+  care: [{ type: Schema.Types.ObjectId, ref: 'Care' }]
 }, {
   timestamps: true
 })
