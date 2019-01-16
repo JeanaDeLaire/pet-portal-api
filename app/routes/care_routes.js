@@ -4,7 +4,8 @@ const express = require('express')
 const passport = require('passport')
 
 // pull in Mongoose model for cares
-const Care = require('../models/care')
+const { Care } = require('../models/care')
+const Pet = require('../models/pet')
 
 // we'll use this to intercept any errors that get thrown and send them
 // back to the client with the appropriate status code
@@ -29,14 +30,11 @@ const requireToken = passport.authenticate('bearer', { session: false })
 const router = express.Router()
 
 // INDEX
-// GET /cares
+// GET /pets
 router.get('/cares', requireToken, (req, res) => {
-  Care.find()
-    .then(cares => {
-      // `cares` will be an array of Mongoose documents
-      // we want to convert each one to a POJO, so we use `.map` to
-      // apply `.toObject` to each one
-      return cares.map(care => care.toObject())
+  Pet.findById(req.pet.id)
+    .then(pet => {
+      return pet.cares.map(care => care.toObject())
     })
     // respond with status 200 and JSON of the cares
     .then(cares => res.status(200).json({ cares: cares }))
@@ -44,28 +42,18 @@ router.get('/cares', requireToken, (req, res) => {
     .catch(err => handle(err, res))
 })
 
-// SHOW
-// GET /cares/5a7db6c74d55bc51bdf39793
-router.get('/cares/:id', requireToken, (req, res) => {
-  // req.params.id will be set based on the `:id` in the route
-  Care.findById(req.params.id)
-    .then(handle404)
-    // if `findById` is succesful, respond with 200 and "care" JSON
-    .then(care => res.status(200).json({ care: care.toObject() }))
-    // if an error occurs, pass it to the handler
-    .catch(err => handle(err, res))
-})
-
 // CREATE
-// POST /cares
+// POST /pets
 router.post('/cares', requireToken, (req, res) => {
-  // set owner of new care to be current user
-  req.body.care.owner = req.user.id
+  console.log(req.body)
+  // set owner of new pet to be current user
 
-  Care.create(req.body.care)
+  const care = new Care(req.body.care)
+  Pet.findByIdAndUpdate(req.body.care.pet, {$push: {cares: care}}, {new: true})
     // respond to succesful `create` with status 201 and JSON of new "care"
-    .then(care => {
-      res.status(201).json({ care: care.toObject() })
+    .then(pet => {
+      console.log(pet.toObject())
+      res.status(201).json({ care: pet.toObject().cares })
     })
     // if an error occurs, pass it off to our error handler
     // the error handler needs the error message and the `res` object so that it

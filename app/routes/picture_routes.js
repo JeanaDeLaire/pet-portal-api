@@ -4,7 +4,8 @@ const express = require('express')
 const passport = require('passport')
 
 // pull in Mongoose model for examples
-const Picture = require('../models/picture')
+const User = require('../models/user')
+const { Picture } = require('../models/picture')
 
 // we'll use this to intercept any errors that get thrown and send them
 // back to the client with the appropriate status code
@@ -66,6 +67,7 @@ router.get('/pictures/:id', requireToken, (req, res) => {
 // CREATE
 // POST /examples
 router.post('/pictures', [requireToken, picture.single('image')], (req, res) => {
+  console.log(req)
   // look into req file to confirm information matches schema
   const deleteFromApi = () => {
     fs.unlink(req.file.path, function (err) {
@@ -74,29 +76,33 @@ router.post('/pictures', [requireToken, picture.single('image')], (req, res) => 
     })
   }
 
-  s3Upload(req.file.path, req.file.originalname, req.file.description, req.file.date) // make sure
+  s3Upload(req.file.path, req.file.originalname, req.file.description) // make sure
   // s3Upload function expects the right number of arguments
     .then((response) => {
       console.log(response.Location)
       console.log(req.user.id)
+      // set owner of new upload to be current user
+      // req.body.bucket.owner = req.user.id
       return Picture.create({
         description: req.body.description,
         url: response.Location,
-        date: req.body.date,
         owner: req.user.id
       })
     })
+    .then((picture) => User.findByIdAndUpdate(req.user.id, {$push: {pictures: picture}}, {new: true}))
   // respond wtih json
-    .then((picture) => {
+    .then((user) => {
       // add step to delete file (create function elsewhere using fs.DELETE
-      // file path will be pictures/filename)
-      res.status(201).json({ picture: picture.toObject() })
+      // file path will be buckets/filename)
+      res.status(201).json({ pictures: user.toObject().pictures })
       deleteFromApi()
+      // res.status(201).json({ picture: picture.toObject() })
+      // deleteFromApi()
     })
 
     .catch((err) => {
     // add step to delete file (create function elsewhere using fs.DELETE
-    // file path will be pictures/filename)
+    // file path will be buckets/filename)
       console.error(err)
       deleteFromApi()
     })

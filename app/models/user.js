@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
-const Schema = mongoose.Schema
+const { petSchema } = require('./pet.js')
+const { pictureSchema } = require('./picture.js')
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -12,7 +13,8 @@ const userSchema = new mongoose.Schema({
     required: true
   },
   token: String,
-  pet: [{ type: Schema.Types.ObjectId, ref: 'Pet' }]
+  pets: [petSchema],
+  pictures: [pictureSchema]
 }, {
   timestamps: true,
   toObject: {

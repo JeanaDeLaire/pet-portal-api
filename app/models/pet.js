@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Schema = mongoose.Schema
+const { careSchema } = require('./care.js')
 
 const petSchema = new mongoose.Schema({
   name: {
@@ -20,9 +20,10 @@ const petSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  care: [{ type: Schema.Types.ObjectId, ref: 'Care' }]
+  cares: [careSchema]
 }, {
   timestamps: true
 })
 
-module.exports = mongoose.model('Pet', petSchema)
+const Pet = mongoose.model('Pet', petSchema)
+module.exports = { Pet, petSchema }

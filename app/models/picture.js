@@ -14,13 +14,14 @@ const pictureSchema = new mongoose.Schema({
     default: Date.now,
     required: true
   },
-  pet: {
+  owner: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Pet',
+    ref: 'User',
     required: true
   }
 }, {
   timestamps: true
 })
 
-module.exports = mongoose.model('Picture', pictureSchema)
+const Picture = mongoose.model('Picture', pictureSchema)
+module.exports = { Picture, pictureSchema }

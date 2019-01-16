@@ -8,14 +8,10 @@ const careSchema = new mongoose.Schema({
   details: {
     type: String,
     required: true
-  },
-  pet: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Pet',
-    required: true
   }
 }, {
   timestamps: true
 })
 
-module.exports = mongoose.model('Care', careSchema)
+const Care = mongoose.model('Care', careSchema)
+module.exports = { Care, careSchema }

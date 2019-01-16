@@ -4,7 +4,8 @@ const express = require('express')
 const passport = require('passport')
 
 // pull in Mongoose model for pets
-const Pet = require('../models/pet')
+const User = require('../models/user')
+const { Pet } = require('../models/pet')
 
 // we'll use this to intercept any errors that get thrown and send them
 // back to the client with the appropriate status code
@@ -31,27 +32,15 @@ const router = express.Router()
 // INDEX
 // GET /pets
 router.get('/pets', requireToken, (req, res) => {
-  Pet.find()
-    .then(pets => {
+  User.findById(req.user.id)
+    .then(user => {
       // `pets` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
       // apply `.toObject` to each one
-      return pets.map(pet => pet.toObject())
+      return user.pets.map(pet => pet.toObject())
     })
     // respond with status 200 and JSON of the pets
     .then(pets => res.status(200).json({ pets: pets }))
-    // if an error occurs, pass it to the handler
-    .catch(err => handle(err, res))
-})
-
-// SHOW
-// GET /pets/5a7db6c74d55bc51bdf39793
-router.get('/pets/:id', requireToken, (req, res) => {
-  // req.params.id will be set based on the `:id` in the route
-  Pet.findById(req.params.id)
-    .then(handle404)
-    // if `findById` is succesful, respond with 200 and "pet" JSON
-    .then(pet => res.status(200).json({ pet: pet.toObject() }))
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })
@@ -60,12 +49,14 @@ router.get('/pets/:id', requireToken, (req, res) => {
 // POST /pets
 router.post('/pets', requireToken, (req, res) => {
   // set owner of new pet to be current user
-  req.body.pet.owner = req.user.id
 
-  Pet.create(req.body.pet)
+  const pet = new Pet(req.body.pet)
+
+  User.findByIdAndUpdate(req.user.id, {$push: {pets: pet}}, {new: true})
     // respond to succesful `create` with status 201 and JSON of new "pet"
-    .then(pet => {
-      res.status(201).json({ pet: pet.toObject() })
+    .then(user => {
+      console.log(user.toObject())
+      res.status(201).json({ pets: user.toObject().pets })
     })
     // if an error occurs, pass it off to our error handler
     // the error handler needs the error message and the `res` object so that it
@@ -78,9 +69,9 @@ router.post('/pets', requireToken, (req, res) => {
 router.patch('/pets/:id', requireToken, (req, res) => {
   // if the client attempts to change the `owner` property by including a new
   // owner, prevent that by deleting that key/value pair
-  delete req.body.pet.owner
+  delete req.body.user.pet.owner
 
-  Pet.findById(req.params.id)
+  User.findByIdAnd(req.params.id)
     .then(handle404)
     .then(pet => {
       // pass the `req` object and the Mongoose record to `requireOwnership`
@@ -105,21 +96,34 @@ router.patch('/pets/:id', requireToken, (req, res) => {
     .catch(err => handle(err, res))
 })
 
+// Delete
+router.delete('/pets/:id', requireToken, (req, res) => {
+  User.findById(req.user.id)
+    .then(user => {
+      const petI = user.pets.indexOf(req.params.id)
+      console.log('start ', user.pets, '\n\n')
+      user.pets.splice(petI - 1, 1)
+      console.log('after ', user.pets)
+      user.save()
+    })
+})
+
 // DESTROY
 // DELETE /pets/5a7db6c74d55bc51bdf39793
-router.delete('/pets/:id', requireToken, (req, res) => {
-  Pet.findById(req.params.id)
-    .then(handle404)
-    .then(pet => {
-      // throw an error if current user doesn't own `pet`
-      requireOwnership(req, pet)
-      // delete the pet ONLY IF the above didn't throw
-      pet.remove()
-    })
-    // send back 204 and no content if the deletion succeeded
-    .then(() => res.sendStatus(204))
-    // if an error occurs, pass it to the handler
-    .catch(err => handle(err, res))
-})
+// router.delete('/pets/:id', requireToken, (req, res) => {
+//   console.log(req.params.id)
+//   Pet.findById(req.params.id)
+//     .then(handle404)
+//     .then(pet => {
+//       // throw an error if current user doesn't own `pet`
+//       requireOwnership(req, pet)
+//       // delete the pet ONLY IF the above didn't throw
+//       pet.remove()
+//     })
+//     // send back 204 and no content if the deletion succeeded
+//     .then(() => res.sendStatus(204))
+//     // if an error occurs, pass it to the handler
+//     .catch(err => handle(err, res))
+// })
 
 module.exports = router
