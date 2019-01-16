@@ -38,12 +38,12 @@ const router = express.Router()
 // INDEX
 // GET /examples
 router.get('/pictures', requireToken, (req, res) => {
-  Picture.find()
-    .then(pictures => {
+  User.findById(req.user.id)
+    .then(user => {
       // `examples` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
       // apply `.toObject` to each one
-      return pictures.map(picture => picture.toObject())
+      return user.pictures.map(picture => picture.toObject())
     })
     // respond with status 200 and JSON of the examples
     .then(pictures => res.status(200).json({ pictures: pictures }))
@@ -147,21 +147,35 @@ router.patch('/pictures/:id', requireToken, (req, res) => {
     .catch(err => handle(err, res))
 })
 
-// DESTROY
-// DELETE /examples/5a7db6c74d55bc51bdf39793
+// Destroy
 router.delete('/pictures/:id', requireToken, (req, res) => {
-  Picture.findById(req.params.id)
-    .then(handle404)
-    .then(picture => {
-      // throw an error if current user doesn't own `example`
-      requireOwnership(req, picture)
-      // delete the example ONLY IF the above didn't throw
-      picture.remove()
+  User.findById(req.user.id)
+    .then(user => {
+      const pictureI = user.pictures.indexOf(req.params.id)
+      console.log('start ', user.pictures, '\n\n')
+      user.pictures.splice(pictureI - 1, 1)
     })
     // send back 204 and no content if the deletion succeeded
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })
+
+// // DESTROY
+// // DELETE /examples/5a7db6c74d55bc51bdf39793
+// router.delete('/pictures/:id', requireToken, (req, res) => {
+//   Picture.findById(req.params.id)
+//     .then(handle404)
+//     .then(picture => {
+//       // throw an error if current user doesn't own `example`
+//       requireOwnership(req, picture)
+//       // delete the example ONLY IF the above didn't throw
+//       picture.remove()
+//     })
+//     // send back 204 and no content if the deletion succeeded
+//     .then(() => res.sendStatus(204))
+//     // if an error occurs, pass it to the handler
+//     .catch(err => handle(err, res))
+// })
 
 module.exports = router

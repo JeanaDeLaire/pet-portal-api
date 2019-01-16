@@ -66,21 +66,70 @@ router.post('/pets', requireToken, (req, res) => {
 
 // UPDATE
 // PATCH /pets/5a7db6c74d55bc51bdf39793
-router.patch('/pets/:id', requireToken, (req, res) => {
-  // if the client attempts to change the `owner` property by including a new
-  // owner, prevent that by deleting that key/value pair
-  delete req.body.user.pet.owner
+// router.patch('/pets/:id', requireToken, (req, res) => {
+//   // if the client attempts to change the `owner` property by including a new
+//   // owner, prevent that by deleting that key/value pair
+//   delete req.body.user.pet.owner
 
-  User.findByIdAnd(req.params.id)
+//   User.findByIdAnd(req.params.id)
+//     .then(handle404)
+//     .then(pet => {
+//       // pass the `req` object and the Mongoose record to `requireOwnership`
+//       // it will throw an error if the current user isn't the owner
+//       requireOwnership(req, pet)
+//
+//       // the client will often send empty strings for parameters that it does
+//       // not want to update. We delete any key/value pair where the value is
+//       // an empty string before updating
+//       Object.keys(req.body.pet).forEach(key => {
+//         if (req.body.pet[key] === '') {
+//           delete req.body.pet[key]
+//         }
+//       })
+//
+//       // pass the result of Mongoose's `.update` to the next `.then`
+//       return pet.update(req.body.pet)
+//     })
+//     // if that succeeded, return 204 and no JSON
+//     .then(() => res.sendStatus(204))
+//     // if an error occurs, pass it to the handler
+//     .catch(err => handle(err, res))
+// })
+
+// Destroy
+router.delete('/pets/:id', requireToken, (req, res) => {
+  User.findById(req.user.id)
+    .then(user => {
+      const petI = user.pets.indexOf(req.params.id)
+      console.log('start ', user.pets, '\n\n')
+      user.pets.splice(petI - 1, 1)
+      console.log('after ', user.pets)
+      user.save()
+    })
+    // if that succeeded, return 204 and no JSON
+    .then(() => res.sendStatus(204))
+    // if an error occurs, pass it to the handler
+    .catch(err => handle(err, res))
+})
+
+// UPDATE
+router.patch('/pets/:id', requireToken, (req, res) => {
+  User.findById(req.user.id)
+    .then(user => {
+      // console.log(user)
+      const currentPet = user.pets.find(pet => String(pet._id) === req.params.id)
+      // const nextPet = { ...currentPet, ...req.body.pet }
+      console.log(currentPet)
+      currentPet.update(req.body.pet)
+      // user.save()
+    })
     .then(handle404)
     .then(pet => {
       // pass the `req` object and the Mongoose record to `requireOwnership`
       // it will throw an error if the current user isn't the owner
       requireOwnership(req, pet)
 
-      // the client will often send empty strings for parameters that it does
-      // not want to update. We delete any key/value pair where the value is
-      // an empty string before updating
+      // delete any key/value pair where the value is empty before updating
       Object.keys(req.body.pet).forEach(key => {
         if (req.body.pet[key] === '') {
           delete req.body.pet[key]
@@ -95,35 +144,5 @@ router.patch('/pets/:id', requireToken, (req, res) => {
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })
-
-// Delete
-router.delete('/pets/:id', requireToken, (req, res) => {
-  User.findById(req.user.id)
-    .then(user => {
-      const petI = user.pets.indexOf(req.params.id)
-      console.log('start ', user.pets, '\n\n')
-      user.pets.splice(petI - 1, 1)
-      console.log('after ', user.pets)
-      user.save()
-    })
-})
-
-// DESTROY
-// DELETE /pets/5a7db6c74d55bc51bdf39793
-// router.delete('/pets/:id', requireToken, (req, res) => {
-//   console.log(req.params.id)
-//   Pet.findById(req.params.id)
-//     .then(handle404)
-//     .then(pet => {
-//       // throw an error if current user doesn't own `pet`
-//       requireOwnership(req, pet)
-//       // delete the pet ONLY IF the above didn't throw
-//       pet.remove()
-//     })
-//     // send back 204 and no content if the deletion succeeded
-//     .then(() => res.sendStatus(204))
-//     // if an error occurs, pass it to the handler
-//     .catch(err => handle(err, res))
-// })
 
 module.exports = router
