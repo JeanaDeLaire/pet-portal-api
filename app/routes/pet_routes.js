@@ -18,6 +18,7 @@ const requireToken = passport.authenticate('bearer', { session: false })
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
 
+const ObjectId = require('mongoose').Types.ObjectId
 // INDEX
 // GET /pets
 router.get('/pets', requireToken, (req, res) => {
@@ -45,7 +46,7 @@ router.post('/pets', requireToken, (req, res) => {
     // respond to succesful `create` with status 201 and JSON of new "pet"
     .then(user => {
       console.log(user.toObject())
-      res.status(201).json({ pets: user.toObject().pets })
+      res.status(201).json({ user: user.toObject() })
     })
     // if an error occurs, pass it off to our error handler
     // the error handler needs the error message and the `res` object so that it
@@ -55,14 +56,15 @@ router.post('/pets', requireToken, (req, res) => {
 
 // Destroy
 router.delete('/pets/:id', requireToken, (req, res) => {
-  User.findById(req.user.id)
-    .then(user => {
-      const petI = user.pets.findIndex(pet => String(pet._id) === req.params.id)
-      console.log('start ', user.pets, '\n\n')
-      user.pets.splice(petI - 1, 1)
-      console.log('after ', user.pets)
-      user.save()
-    })
+  User.update({ _id: req.user.id }, { $pull: { pets: { _id: new ObjectId(req.params.id) } } })
+  // User.findById(req.user.id)
+  //   .then(user => {
+  //     const petI = user.pets.findIndex(pet => String(pet._id) === req.params.id)
+  //     console.log('start ', user.pets, '\n\n')
+  //     user.pets.splice(petI - 1, 1)
+  //     console.log('after ', user.pets)
+  //     user.save()
+  //   })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler

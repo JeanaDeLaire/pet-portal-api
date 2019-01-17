@@ -32,36 +32,22 @@ router.get('/cares', requireToken, (req, res) => {
     .catch(err => handle(err, res))
 })
 
-// CREATE
-// POST /pets
+// Create
 router.post('/cares', requireToken, (req, res) => {
+  // save the pet id and remove it from the body
   const petId = req.body.care.pet
   delete req.body.care.pet
+
+  // make a new care doc
   const care = new Care(req.body.care)
-  // set owner of new pet to be current user
-  User.findByIdAndUpdate({ '_id': req.user.id, 'pets._id': petId },
-    { $push: { 'pets.$[].cares': care } }
+
+  // update the user object using filtering and a nested $push
+  User.update({ '_id': req.user.id, 'pets._id': petId },
+    { $push: { 'pets.$.cares': care } }, { new: true }
   )
-  // User.findById(req.user.id)
-  // const petI = user.pets.indexOf(req.body.pet._id)
-  // User.findByIdAndUpdate(req.user.id, {$push: {pet[petI].cares: care}}, {new: true})
-    // respond to succesful `create` with status 201 and JSON of new "pet"
-    // .then(user => {
-    //   // const petI = user.pets.indexOf(pet => String(pet._id) === req.body.care.pet)
-    //   console.log(petId)
-    //   console.log(user.pets.id(petId))
-    //   // console.log(pet)
-    //   // pet.set({$push: {cares: care}})
-    //   // console.log(pet)
-    //   user.pets.id(petId).cares.set({$push: {cares: care}})
-    //   return user.save()
-    //   // res.status(201).json({ cares: user.toObject().pets[petI].cares })
-    // })
-    .then(user => res.status(201))
-    // .json({ cares: user.toObject().pet.cares }))
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
+    .then(() => {
+      res.sendStatus(201)
+    })
     .catch(err => handle(err, res))
 })
 
@@ -77,24 +63,6 @@ router.delete('/cares/:id', requireToken, (req, res) => {
     })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
-    // if an error occurs, pass it to the handler
-    .catch(err => handle(err, res))
-})
-
-// UPDATE
-router.patch('/pets/:id', requireToken, (req, res) => {
-  User.findById(req.user.id)
-    .then(handle404)
-    .then(user => {
-      const currentPet = user.pets.find(pet => String(pet._id) === req.params.id)
-      currentPet.set(req.body.pet)
-      return user.save()
-    })
-    .then((user) => {
-      const pet = user.pets.find(pet => String(pet._id) === req.params.id)
-      console.log(pet)
-      res.status(200).json({ pet })
-    })
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })
