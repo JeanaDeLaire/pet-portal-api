@@ -18,6 +18,8 @@ const requireToken = passport.authenticate('bearer', { session: false })
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
 
+const ObjectId = require('mongoose').Types.ObjectId
+
 // INDEX
 // GET /pets
 router.get('/cares', requireToken, (req, res) => {
@@ -53,14 +55,10 @@ router.post('/cares', requireToken, (req, res) => {
 
 // Destroy
 router.delete('/cares/:id', requireToken, (req, res) => {
-  User.findById(req.user.id)
-    .then(user => {
-      const petI = user.pets.indexOf(req.params.id)
-      console.log('start ', user.pets, '\n\n')
-      user.pets.splice(petI - 1, 1)
-      console.log('after ', user.pets)
-      user.save()
-    })
+  console.log(req)
+  const petId = req.body.care.pet
+  delete req.body.care.pet
+  User.update({ '_id': req.user.id, 'pets._id': petId }, { $pull: { cares: { _id: new ObjectId(req.params.id) } } })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
