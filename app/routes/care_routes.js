@@ -3,27 +3,16 @@ const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
 
-// pull in Mongoose model for cares
+// pull in Mongoose model for pets
+const User = require('../models/user')
 const { Care } = require('../models/care')
-const Pet = require('../models/pet')
 
-// we'll use this to intercept any errors that get thrown and send them
-// back to the client with the appropriate status code
 const handle = require('../../lib/error_handler')
 
-// this is a collection of methods that help us detect situations when we need
-// to throw a custom error
 const customErrors = require('../../lib/custom_errors')
 
-// we'll use this function to send 404 when non-existant document is requested
 const handle404 = customErrors.handle404
-// we'll use this function to send 401 when a user tries to modify a resource
-// that's owned by someone else
-const requireOwnership = customErrors.requireOwnership
 
-// passing this as a second argument to `router.<verb>` will make it
-// so that a token MUST be passed for that route to be available
-// it will also set `res.user`
 const requireToken = passport.authenticate('bearer', { session: false })
 
 // instantiate a router (mini app that only handles routes)
@@ -32,9 +21,10 @@ const router = express.Router()
 // INDEX
 // GET /pets
 router.get('/cares', requireToken, (req, res) => {
-  Pet.findById(req.pet.id)
-    .then(pet => {
-      return pet.cares.map(care => care.toObject())
+  User.findById(req.user.id)
+    .then(user => {
+      const petI = user.pets.indexOf(req.body.pet._id)
+      return user.pet[petI].cares.map(care => care.toObject())
     })
     // respond with status 200 and JSON of the cares
     .then(cares => res.status(200).json({ cares: cares }))
@@ -45,47 +35,45 @@ router.get('/cares', requireToken, (req, res) => {
 // CREATE
 // POST /pets
 router.post('/cares', requireToken, (req, res) => {
-  console.log(req.body)
-  // set owner of new pet to be current user
-
+  const petId = req.body.care.pet
+  delete req.body.care.pet
   const care = new Care(req.body.care)
-  Pet.findByIdAndUpdate(req.body.care.pet, {$push: {cares: care}}, {new: true})
-    // respond to succesful `create` with status 201 and JSON of new "care"
-    .then(pet => {
-      console.log(pet.toObject())
-      res.status(201).json({ care: pet.toObject().cares })
-    })
+  // set owner of new pet to be current user
+  User.findByIdAndUpdate({ '_id': req.user.id, 'pets._id': petId },
+    { $push: { 'pets.$[].cares': care } }
+  )
+  // User.findById(req.user.id)
+  // const petI = user.pets.indexOf(req.body.pet._id)
+  // User.findByIdAndUpdate(req.user.id, {$push: {pet[petI].cares: care}}, {new: true})
+    // respond to succesful `create` with status 201 and JSON of new "pet"
+    // .then(user => {
+    //   // const petI = user.pets.indexOf(pet => String(pet._id) === req.body.care.pet)
+    //   console.log(petId)
+    //   console.log(user.pets.id(petId))
+    //   // console.log(pet)
+    //   // pet.set({$push: {cares: care}})
+    //   // console.log(pet)
+    //   user.pets.id(petId).cares.set({$push: {cares: care}})
+    //   return user.save()
+    //   // res.status(201).json({ cares: user.toObject().pets[petI].cares })
+    // })
+    .then(user => res.status(201))
+    // .json({ cares: user.toObject().pet.cares }))
     // if an error occurs, pass it off to our error handler
     // the error handler needs the error message and the `res` object so that it
     // can send an error message back to the client
     .catch(err => handle(err, res))
 })
 
-// UPDATE
-// PATCH /cares/5a7db6c74d55bc51bdf39793
-router.patch('/cares/:id', requireToken, (req, res) => {
-  // if the client attempts to change the `owner` property by including a new
-  // owner, prevent that by deleting that key/value pair
-  delete req.body.care.owner
-
-  Care.findById(req.params.id)
-    .then(handle404)
-    .then(care => {
-      // pass the `req` object and the Mongoose record to `requireOwnership`
-      // it will throw an error if the current user isn't the owner
-      requireOwnership(req, care)
-
-      // the client will often send empty strings for parameters that it does
-      // not want to update. We delete any key/value pair where the value is
-      // an empty string before updating
-      Object.keys(req.body.care).forEach(key => {
-        if (req.body.care[key] === '') {
-          delete req.body.care[key]
-        }
-      })
-
-      // pass the result of Mongoose's `.update` to the next `.then`
-      return care.update(req.body.care)
+// Destroy
+router.delete('/cares/:id', requireToken, (req, res) => {
+  User.findById(req.user.id)
+    .then(user => {
+      const petI = user.pets.indexOf(req.params.id)
+      console.log('start ', user.pets, '\n\n')
+      user.pets.splice(petI - 1, 1)
+      console.log('after ', user.pets)
+      user.save()
     })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
@@ -93,19 +81,20 @@ router.patch('/cares/:id', requireToken, (req, res) => {
     .catch(err => handle(err, res))
 })
 
-// DESTROY
-// DELETE /cares/5a7db6c74d55bc51bdf39793
-router.delete('/cares/:id', requireToken, (req, res) => {
-  Care.findById(req.params.id)
+// UPDATE
+router.patch('/pets/:id', requireToken, (req, res) => {
+  User.findById(req.user.id)
     .then(handle404)
-    .then(care => {
-      // throw an error if current user doesn't own `care`
-      requireOwnership(req, care)
-      // delete the care ONLY IF the above didn't throw
-      care.remove()
+    .then(user => {
+      const currentPet = user.pets.find(pet => String(pet._id) === req.params.id)
+      currentPet.set(req.body.pet)
+      return user.save()
     })
-    // send back 204 and no content if the deletion succeeded
-    .then(() => res.sendStatus(204))
+    .then((user) => {
+      const pet = user.pets.find(pet => String(pet._id) === req.params.id)
+      console.log(pet)
+      res.status(200).json({ pet })
+    })
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })
