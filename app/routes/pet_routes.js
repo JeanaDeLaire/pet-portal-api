@@ -115,32 +115,33 @@ router.delete('/pets/:id', requireToken, (req, res) => {
 // UPDATE
 router.patch('/pets/:id', requireToken, (req, res) => {
   User.findById(req.user.id)
-    .then(user => {
-      // console.log(user)
-      const currentPet = user.pets.find(pet => String(pet._id) === req.params.id)
-      // const nextPet = { ...currentPet, ...req.body.pet }
-      console.log(currentPet)
-      currentPet.update(req.body.pet)
-      // user.save()
-    })
     .then(handle404)
-    .then(pet => {
-      // pass the `req` object and the Mongoose record to `requireOwnership`
-      // it will throw an error if the current user isn't the owner
-      requireOwnership(req, pet)
-
-      // delete any key/value pair where the value is empty before updating
-      Object.keys(req.body.pet).forEach(key => {
-        if (req.body.pet[key] === '') {
-          delete req.body.pet[key]
-        }
-      })
-
-      // pass the result of Mongoose's `.update` to the next `.then`
-      return pet.update(req.body.pet)
+    .then(user => {
+      const currentPet = user.pets.find(pet => String(pet._id) === req.params.id)
+      currentPet.set(req.body.pet)
+      return user.save()
     })
+    // .then(user => {
+    //   // pass the `req` object and the Mongoose record to `requireOwnership`
+    //   // it will throw an error if the current user isn't the owner
+    //   requireOwnership(req, pet)
+    //
+    //   // delete any key/value pair where the value is empty before updating
+    //   Object.keys(req.body.pet).forEach(key => {
+    //     if (req.body.pet[key] === '') {
+    //       delete req.body.pet[key]
+    //     }
+    //   })
+    //
+    //   // pass the result of Mongoose's `.update` to the next `.then`
+    //   return pet.update(req.body.pet)
+    // })
     // if that succeeded, return 204 and no JSON
-    .then(() => res.sendStatus(204))
+    .then((user) => {
+      const pet = user.pets.find(pet => String(pet._id) === req.params.id)
+      console.log(pet)
+      res.status(200).json({ pet })
+    })
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })
