@@ -19,6 +19,7 @@ const requireToken = passport.authenticate('bearer', { session: false })
 const router = express.Router()
 
 const ObjectId = require('mongoose').Types.ObjectId
+
 // INDEX
 // GET /pets
 router.get('/pets', requireToken, (req, res) => {
@@ -48,9 +49,6 @@ router.post('/pets', requireToken, (req, res) => {
       console.log(user.toObject())
       res.status(201).json({ user: user.toObject() })
     })
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
     .catch(err => handle(err, res))
 })
 

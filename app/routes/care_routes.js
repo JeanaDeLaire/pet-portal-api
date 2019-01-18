@@ -47,6 +47,10 @@ router.post('/cares', requireToken, (req, res) => {
   User.update({ '_id': req.user.id, 'pets._id': petId },
     { $push: { 'pets.$.cares': care } }, { new: true }
   )
+    // .then(user => {
+    //   console.log(user.toObject())
+    //   res.status(201).json({ user: user.toObject() })
+    // })
     .then(() => {
       res.sendStatus(201)
     })
