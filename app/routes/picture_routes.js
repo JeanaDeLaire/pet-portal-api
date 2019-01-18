@@ -3,6 +3,9 @@ const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
 
+
+const ObjectId = require('mongoose').Types.ObjectId
+
 // pull in Mongoose model for examples
 const User = require('../models/user')
 const { Picture } = require('../models/picture')
@@ -91,15 +94,14 @@ router.post('/pictures', [requireToken, picture.single('image')], (req, res) => 
     })
     .then((picture) => User.findByIdAndUpdate(req.user.id, {$push: {pictures: picture}}, {new: true}))
   // respond wtih json
-    .then((user) => {
+    .then(user => {
       // add step to delete file (create function elsewhere using fs.DELETE
       // file path will be buckets/filename)
-      res.status(201).json({ pictures: user.toObject().pictures })
+      res.status(201).json({ user: user.toObject() })
       deleteFromApi()
       // res.status(201).json({ picture: picture.toObject() })
       // deleteFromApi()
     })
-
     .catch((err) => {
     // add step to delete file (create function elsewhere using fs.DELETE
     // file path will be buckets/filename)

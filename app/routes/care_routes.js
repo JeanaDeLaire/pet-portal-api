@@ -55,9 +55,9 @@ router.post('/cares', requireToken, (req, res) => {
 
 // Destroy
 router.delete('/cares/:id', requireToken, (req, res) => {
-  console.log(req)
-  const petId = req.body.care.pet
-  delete req.body.care.pet
+  console.log(req.params.id)
+  const petId = req.user.pets.findIndex(pet => pet.cares._id === req.params.id)
+  console.log(petId)
   User.update({ '_id': req.user.id, 'pets._id': petId }, { $pull: { cares: { _id: new ObjectId(req.params.id) } } })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))

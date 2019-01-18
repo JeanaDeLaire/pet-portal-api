@@ -80,11 +80,7 @@ router.patch('/pets/:id', requireToken, (req, res) => {
       currentPet.set(req.body.pet)
       return user.save()
     })
-    .then((user) => {
-      const pet = user.pets.find(pet => String(pet._id) === req.params.id)
-      console.log(pet)
-      res.status(200).json({ pet })
-    })
+    .then(user => res.status(200).json({ user: user.toObject() }))
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })

@@ -11,7 +11,6 @@ const pictureSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    default: Date.now,
     required: true
   },
   owner: {
