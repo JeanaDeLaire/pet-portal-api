@@ -11,7 +11,8 @@ const pictureSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    required: true
+    required: true,
+    default: Date.now
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

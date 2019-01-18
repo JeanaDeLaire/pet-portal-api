@@ -75,15 +75,12 @@ router.post('/pictures', [requireToken, picture.single('image')], (req, res) => 
   const deleteFromApi = () => {
     fs.unlink(req.file.path, function (err) {
       if (err) throw err
-      console.log('File Deleted')
     })
   }
 
   s3Upload(req.file.path, req.file.originalname, req.file.description) // make sure
   // s3Upload function expects the right number of arguments
     .then((response) => {
-      console.log(response.Location)
-      console.log(req.user.id)
       // set owner of new upload to be current user
       // req.body.bucket.owner = req.user.id
       return Picture.create({
