@@ -59,11 +59,19 @@ router.post('/cares', requireToken, (req, res) => {
 
 // Destroy
 router.delete('/cares/:id', requireToken, (req, res) => {
-  console.log(req.params.id)
-  const petId = req.user.pets.findIndex(pet => pet.cares._id === req.params.id)
-  console.log(petId)
-  User.update({ '_id': req.user.id, 'pets._id': petId }, { $pull: { cares: { _id: new ObjectId(req.params.id) } } })
-    // if that succeeded, return 204 and no JSON
+  User.update({ '_id': req.user.id},
+    { $pull: { 'pets.$.cares': care } }, { new: true }
+  )
+  User.update({ _id: req.user.id }, { $pull: { 'pets.$.cares': { _id: new ObjectId(req.params.id) } } })
+  // const petId = User.find({ 'pets.cares.id': ObjectId(req.params.id) })
+  //   .then(res => console.log(res))
+//   var name = 'Peter';
+// model.findOne({name: new RegExp('^'+name+'$', "i")}, function(err, doc) {
+//   //Do your action here..
+// });
+  // console.log(petId)
+  // User.update({ '_id': req.user.id, 'pets._id': petId }, { $pull: { cares: { _id: new ObjectId(req.params.id) } } })
+  //   // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
