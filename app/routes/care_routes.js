@@ -37,41 +37,48 @@ router.get('/cares', requireToken, (req, res) => {
 // Create
 router.post('/cares', requireToken, (req, res) => {
   // save the pet id and remove it from the body
-  const petId = req.body.care.pet
-  delete req.body.care.pet
+  // const petId = req.body.care.pet
+  // delete req.body.care.pet
 
   // make a new care doc
   const care = new Care(req.body.care)
-
   // update the user object using filtering and a nested $push
-  User.update({ '_id': req.user.id, 'pets._id': petId },
-    { $push: { 'pets.$.cares': care } }, { new: true }
+  User.findOneAndUpdate({
+    '_id': req.user.id,
+    'pets._id': req.body.care.pet
+  },
+  {
+    $push: { 'pets.$.cares': care }
+  }, { new: true }
   )
     // .then(user => {
     //   console.log(user.toObject())
     //   res.status(201).json({ user: user.toObject() })
     // })
-    .then(() => {
-      res.sendStatus(201)
+    .then(user => {
+      res.status(201).json({ user: user.toObject() })
     })
     .catch(err => handle(err, res))
 })
 
 // Destroy
 router.delete('/cares/:id', requireToken, (req, res) => {
-  User.update({ '_id': req.user.id},
-    { $pull: { 'pets.$.cares': care } }, { new: true }
-  )
-  User.update({ _id: req.user.id }, { $pull: { 'pets.$.cares': { _id: new ObjectId(req.params.id) } } })
-  // const petId = User.find({ 'pets.cares.id': ObjectId(req.params.id) })
-  //   .then(res => console.log(res))
-//   var name = 'Peter';
-// model.findOne({name: new RegExp('^'+name+'$', "i")}, function(err, doc) {
-//   //Do your action here..
-// });
-  // console.log(petId)
-  // User.update({ '_id': req.user.id, 'pets._id': petId }, { $pull: { cares: { _id: new ObjectId(req.params.id) } } })
-  //   // if that succeeded, return 204 and no JSON
+  const { id: careId } = req.params
+
+  User.findById(req.user.id)
+    .then(user => {
+      const { pets } = user
+
+      const pet = pets.find(pet => {
+        const careIds = pet.cares.map(care => care._id.toString())
+        return careIds.includes(careId)
+      })
+
+      pet.cares.pull({ _id: careId })
+
+      return user.save()
+    })
+    // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))

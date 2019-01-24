@@ -55,15 +55,6 @@ router.post('/pets', requireToken, (req, res) => {
 // Destroy
 router.delete('/pets/:id', requireToken, (req, res) => {
   User.update({ _id: req.user.id }, { $pull: { pets: { _id: new ObjectId(req.params.id) } } })
-  // User.findById(req.user.id)
-  //   .then(user => {
-  //     const petI = user.pets.findIndex(pet => String(pet._id) === req.params.id)
-  //     console.log('start ', user.pets, '\n\n')
-  //     user.pets.splice(petI - 1, 1)
-  //     console.log('after ', user.pets)
-  //     user.save()
-  //   })
-    // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
@@ -78,7 +69,7 @@ router.patch('/pets/:id', requireToken, (req, res) => {
       currentPet.set(req.body.pet)
       return user.save()
     })
-    .then(user => res.status(200).json({ user: user.toObject() }))
+    .then(user => res.status(201).json({ user: user.toObject() }))
     // if an error occurs, pass it to the handler
     .catch(err => handle(err, res))
 })
