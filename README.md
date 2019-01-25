@@ -36,6 +36,14 @@ The next big improvement is to add the ability for users to delete photos from t
 - Get Pictures
 - Add Pictures
 
+### Set-up Instructions:
+I welcome you to contribute to this project. Simply follow these steps and submit a pull request when you have something to add:
+
+- Fork this repository
+- Clone it locally
+- Run Bundle Install
+- Create a new feature branch and begin working.
+
 ## ERD
 ![ERD](https://media.git.generalassemb.ly/user/17062/files/c7afd900-1fdb-11e9-8148-a9b4ce673162)
 
