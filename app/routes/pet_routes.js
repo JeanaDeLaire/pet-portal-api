@@ -2,23 +2,17 @@
 const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
-
 // pull in Mongoose model for pets
 const User = require('../models/user')
 const { Pet } = require('../models/pet')
-
 const handle = require('../../lib/error_handler')
-
 const customErrors = require('../../lib/custom_errors')
-
 const handle404 = customErrors.handle404
-
 const requireToken = passport.authenticate('bearer', { session: false })
+const ObjectId = require('mongoose').Types.ObjectId
 
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
-
-const ObjectId = require('mongoose').Types.ObjectId
 
 // INDEX
 // GET /pets
@@ -46,7 +40,6 @@ router.post('/pets', requireToken, (req, res) => {
   User.findByIdAndUpdate(req.user.id, {$push: {pets: pet}}, {new: true})
     // respond to succesful `create` with status 201 and JSON of new "pet"
     .then(user => {
-      console.log(user.toObject())
       res.status(201).json({ user: user.toObject() })
     })
     .catch(err => handle(err, res))

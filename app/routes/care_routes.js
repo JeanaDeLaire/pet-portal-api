@@ -2,23 +2,17 @@
 const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 const passport = require('passport')
-
 // pull in Mongoose model for pets
 const User = require('../models/user')
 const { Care } = require('../models/care')
-
 const handle = require('../../lib/error_handler')
-
-const customErrors = require('../../lib/custom_errors')
-
-const handle404 = customErrors.handle404
-
+// const customErrors = require('../../lib/custom_errors')
+// const handle404 = customErrors.handle404
 const requireToken = passport.authenticate('bearer', { session: false })
+// const ObjectId = require('mongoose').Types.ObjectId
 
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
-
-const ObjectId = require('mongoose').Types.ObjectId
 
 // INDEX
 // GET /pets
@@ -36,10 +30,6 @@ router.get('/cares', requireToken, (req, res) => {
 
 // Create
 router.post('/cares', requireToken, (req, res) => {
-  // save the pet id and remove it from the body
-  // const petId = req.body.care.pet
-  // delete req.body.care.pet
-
   // make a new care doc
   const care = new Care(req.body.care)
   // update the user object using filtering and a nested $push
@@ -51,10 +41,6 @@ router.post('/cares', requireToken, (req, res) => {
     $push: { 'pets.$.cares': care }
   }, { new: true }
   )
-    // .then(user => {
-    //   console.log(user.toObject())
-    //   res.status(201).json({ user: user.toObject() })
-    // })
     .then(user => {
       res.status(201).json({ user: user.toObject() })
     })
@@ -68,14 +54,11 @@ router.delete('/cares/:id', requireToken, (req, res) => {
   User.findById(req.user.id)
     .then(user => {
       const { pets } = user
-
       const pet = pets.find(pet => {
         const careIds = pet.cares.map(care => care._id.toString())
         return careIds.includes(careId)
       })
-
       pet.cares.pull({ _id: careId })
-
       return user.save()
     })
     // if that succeeded, return 204 and no JSON
