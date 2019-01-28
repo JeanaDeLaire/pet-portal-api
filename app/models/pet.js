@@ -4,8 +4,7 @@ const { careSchema } = require('./care.js')
 const petSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   nickname: {
     type: String,
