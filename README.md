@@ -36,6 +36,15 @@ The next big improvement is to add the ability for users to delete photos from t
 - Get Pictures
 - Add Pictures
 
+### Authentication
+
+| Verb   | URI Pattern            | Controller#Action |
+|--------|------------------------|-------------------|
+| POST   | `/sign-up`             | `users#signup`    |
+| POST   | `/sign-in`             | `users#signin`    |
+| PATCH  | `/change-password/` | `users#changepw`  |
+| DELETE | `/sign-out/`        | `users#signout`   |
+
 ### Set-up Instructions:
 I welcome you to contribute to this project. Simply follow these steps and submit a pull request when you have something to add:
 
